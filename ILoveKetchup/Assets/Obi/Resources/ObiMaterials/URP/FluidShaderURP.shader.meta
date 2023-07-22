@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: f15bdcaf06cf94a1bbbafccf418fb36c
+labels:
+- ObiFluid
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _MainTex: {fileID: 2800000, guid: 8ed4ae8a77f485a44a11e0f488b986fe, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
