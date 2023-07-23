@@ -33,7 +33,7 @@ MonoBehaviour:
     generateRefraction: 1
     transparency: 0.423
     absorption: 2.27
-    refraction: -0.0352
+    refraction: 0
     refractionDownsample: 4
     generateFoam: 0
     foamDownsample: 1

@@ -35,16 +35,19 @@ public class KetchupController : MonoBehaviour
     {
         input.OnMousePositionUpdate += this.MousePositionUpdate;
         solver.OnBeginStep += Solver_OnBeginStep;
-        solver.OnCollision += Solver_OnCollision;
-        solver.OnParticleCollision += Solver_OnParticleCollision;
+        emitter.OnEmitParticle += OnEmitParticle;
+        // solver.OnCollision += Solver_OnCollision;
+        // solver.OnParticleCollision += Solver_OnParticleCollision;
     }
 
     private void OnDisable()
     {
         input.OnMousePositionUpdate -= this.MousePositionUpdate;
         solver.OnBeginStep -= Solver_OnBeginStep;
-        solver.OnCollision -= Solver_OnCollision;
-        solver.OnParticleCollision -= Solver_OnParticleCollision;
+        emitter.OnEmitParticle -= OnEmitParticle;
+
+        // solver.OnCollision -= Solver_OnCollision;
+        // solver.OnParticleCollision -= Solver_OnParticleCollision;
     }
     #endregion
     
@@ -84,19 +87,28 @@ public class KetchupController : MonoBehaviour
     
     #region fluid particles
     private SolidData[] solids = new SolidData[0];
-
+    private float minDistancePerFluid = 0.085f;
     private void InitFluid()
     {
         // resize array to store one reference transform per particle:
         Array.Resize(ref solids, solver.allocParticleCount);
     }
 
+    private Vector3 oldSpawnPos = Vector3.up * 1000.0f;
     private void SpawnFluidAt(Vector3 rayPos)
     {
         emitter.transform.position = rayPos + Vector3.up * 0.05f;
+        if (Vector3.Distance(rayPos, oldSpawnPos) < minDistancePerFluid) return;
+        this.oldSpawnPos = rayPos;
         emitter.EmitParticle(0.0f, 0.0f);
     }
 
+    void OnEmitParticle(ObiEmitter emitter, int particleIndex)
+    {   
+        Solidify(particleIndex, new SolidData(null));
+    }
+
+    #region collision (deprecated) performance issue
     void Solver_OnBeginStep(ObiSolver s, float stepTime)
     {
         for (int i = 0; i < solids.Length; ++i)
@@ -138,8 +150,8 @@ public class KetchupController : MonoBehaviour
                     Solidify(particleIndexA, solids[particleIndexB]);
             }
         }
-
     }
+    #endregion
     
     void Solidify(int particleIndex, SolidData solid)
     {
