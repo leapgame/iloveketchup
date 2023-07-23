@@ -46,7 +46,6 @@ namespace Game.Input
 
         private void Log(object msg)
         {
-            return;
             Development.Log(msg);
         }
 

@@ -441,58 +441,6 @@ public static class CommonUtils
         }
     }
     
-    public static bool IsCheckEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return false;
-    
-        try
-        {
-            // Normalize the domain
-            email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
-                                  RegexOptions.None, TimeSpan.FromMilliseconds(200));
-    
-            // Examines the domain part of the email and normalizes it.
-            string DomainMapper(Match match)
-            {
-                // Use IdnMapping class to convert Unicode domain names.
-                var idn = new IdnMapping();
-    
-                // Pull out and process domain name (throws ArgumentException on invalid)
-                string domainName = idn.GetAscii(match.Groups[2].Value);
-    
-                return match.Groups[1].Value + domainName;
-            }
-        }
-        catch (RegexMatchTimeoutException e)
-        {
-            return false;
-        }
-        catch (ArgumentException e)
-        {
-            return false;
-        }
-    
-        try
-        {
-            return Regex.IsMatch(email,
-                                 @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-                                 RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return false;
-        }
-    }
-
-    public static string HideEmail(string email)
-    {
-        var maskedEmail = "";
-        
-        maskedEmail = string.Format("{0}****{1}", email[0], 
-                                        email.Substring(email.IndexOf('@')-1));
-        return maskedEmail;
-    }
     public static long ConvertDatetimeToUnixTimeStamp(DateTime date)
     {
         var dateTimeOffset = new DateTimeOffset(date);

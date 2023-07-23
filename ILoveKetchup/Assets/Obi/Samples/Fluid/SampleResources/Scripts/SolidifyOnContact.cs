@@ -67,7 +67,7 @@ public class SolidifyOnContact : MonoBehaviour
             {
                 int particleIndexA = solver.simplices[e.contacts.Data[i].bodyA];
                 int particleIndexB = solver.simplices[e.contacts.Data[i].bodyB];
-
+        
                 if (solver.invMasses[particleIndexA] < 0.0001f && solver.invMasses[particleIndexB] >= 0.0001f)
                     Solidify(particleIndexB, solids[particleIndexA]);
                 if (solver.invMasses[particleIndexB] < 0.0001f && solver.invMasses[particleIndexA] >= 0.0001f)
