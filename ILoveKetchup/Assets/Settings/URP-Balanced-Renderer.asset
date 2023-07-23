@@ -22,12 +22,12 @@ MonoBehaviour:
     thicknessCutoff: 0.95
     thicknessDownsample: 4
     generateSurface: 1
-    blurRadius: 0.02
-    surfaceDownsample: 4
-    lighting: 0
-    smoothness: 1
+    blurRadius: 0.0071
+    surfaceDownsample: 3
+    lighting: 1
+    smoothness: 0.965
     metalness: 0
-    ambientMultiplier: 1
+    ambientMultiplier: 2.77
     generateReflection: 0
     reflection: 0
     generateRefraction: 1
