@@ -20,6 +20,9 @@ public partial class GameController : MonoBehaviour
     [SerializeField] private PowerHandler power;
     [SerializeField] private GameObject foodContainer;
 
+    //TODO: test, temporary assign
+    [SerializeField] private Throwable m_Throwable;
+
     public State state { get; private set; } = State.INIT;
     
     #region singleton
@@ -52,6 +55,9 @@ public partial class GameController : MonoBehaviour
         yield return C_InitData();
         yield return C_SpawnObjects();
         this.state = State.KETCHUP;
+
+        //power should be in range (5, 15) to forms nice curves
+        m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
     }
     
     #region child steps
@@ -80,14 +86,18 @@ public partial class GameController : MonoBehaviour
 
         //goes to next step
         this.state = State.POWER;
+
+        
     }
 
     private void OnPowerReady()
     {
         //goes to next step
         this.state = State.HITTING;
-        
+
         //start anim fly to target
+        //power should be in range (5, 15) to forms nice curves
+        m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
     }
     
     #region power 

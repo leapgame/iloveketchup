@@ -81,5 +81,15 @@ namespace Suriyun
                 a.SetTrigger(name);
             }
         }
+
+        public void SetTriggerSingleParam(string parameter = "param")
+        {
+            Debug.Log(parameter);
+
+            foreach (Animator a in animators)
+            {
+                a.SetTrigger(parameter);
+            }
+        }
     }
 }
