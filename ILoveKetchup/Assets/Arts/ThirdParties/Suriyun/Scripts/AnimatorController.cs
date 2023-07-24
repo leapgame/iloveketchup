@@ -9,6 +9,11 @@ namespace Suriyun
 
         public Animator[] animators;
 
+        private void Start()
+        {
+            
+        }
+
         public void SwapVisibility(GameObject obj)
         {
             obj.SetActive(!obj.activeSelf);
