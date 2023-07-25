@@ -25,7 +25,6 @@ public class KetchupHandler : MonoBehaviour
     
     [SerializeField] private InputActions input;
     
-    
     [Header("Solver for Cake")]
     [SerializeField] private ObiSolver solver; // using for cake.
     [SerializeField] private ObiEmitter emitter; // using for cake.
@@ -108,14 +107,7 @@ public class KetchupHandler : MonoBehaviour
 
     public void SetTargetThrowing(Transform trans)
     {
-        if (trans == null)
-        {
-            Development.Log("SetTargetThrowing ERROR target is null");
-            return;
-        }
-        
         this.solverTarget.transform.SetParent(trans);
-        this.SetParticleVisible(true, false);
     }
 
     #endregion
@@ -145,7 +137,7 @@ public class KetchupHandler : MonoBehaviour
         // resize array to store one reference transform per particle:
         Array.Resize(ref solids, solver.allocParticleCount);
         ParticleSize = 1.5f;
-        SetParticleVisible(false, true);
+        SetTargetParticleVisible(false, true);
     }
     
     #region cake fluid
@@ -180,6 +172,10 @@ public class KetchupHandler : MonoBehaviour
         return sd;
     }
 
+    public void ClearCakeFluid()
+    {
+        this.emitter.KillAll();
+    }
 
     #endregion
     
@@ -187,7 +183,7 @@ public class KetchupHandler : MonoBehaviour
     #region target fluid
 
     private Tween tweenParticle = null;
-    public void SetParticleVisible(bool isVisible, bool isNow = false)
+    public void SetTargetParticleVisible(bool isVisible, bool isNow = false)
     {
         float finalValue = isVisible ? ParticleSize : 0.0f;
         if (isNow)

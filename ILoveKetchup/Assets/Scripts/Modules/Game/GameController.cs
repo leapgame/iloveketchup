@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using DG.Tweening;
 using Doozy.Runtime.Common;
 using UnityEngine;
 
@@ -15,16 +16,35 @@ public partial class GameController : MonoBehaviour
         HITTING,
         GAMEOVER,
     }
+
+    public enum EndingType
+    {
+        LOSE = 0, 
+        WIN,
+        CRITICAL_WIN,
+    }
+
+    #region const anim state name
+    private const string ANIM_CAM_STATE_KEPCHUP = "ketchup";
+    private const string ANIM_CAM_STATE_POWER = "power";
+    private const string ANIM_CAM_STATE_HIT = "hit";
+    private const string ANIM_CAM_STATE_FAILED = "failed";
+    #endregion
     
+    [SerializeField] private Animator animCam;
     [SerializeField] private KetchupHandler ketchup;
     [SerializeField] private PowerHandler power;
     [SerializeField] private TargetHandler target;
+    [SerializeField] private FoodHandler food;
     [SerializeField] private GameObject foodContainer;
 
     //TODO: test, temporary assign
     [SerializeField] private Throwable m_Throwable;
 
     public State state { get; private set; } = State.INIT;
+    private int requireScore = 100;
+    private int currentScore = 0;
+    private EndingType endingType = EndingType.LOSE;
     
     #region singleton
 
@@ -66,6 +86,7 @@ public partial class GameController : MonoBehaviour
         yield return C_InitData();
         yield return C_SpawnObjects();
         this.state = State.KETCHUP;
+        this.animCam.SetTrigger(ANIM_CAM_STATE_KEPCHUP);
     }
     
     #region child steps
@@ -89,6 +110,7 @@ public partial class GameController : MonoBehaviour
     
     private void OnKetchupReady()
     {
+        Development.Log("OnKetchupReady");
         //hide current UI node
         ketchup.SetBottleVisible(false);
         DoPower();
@@ -96,7 +118,11 @@ public partial class GameController : MonoBehaviour
 
     private void DoPower()
     {
+        Development.Log("DoPower");
         UISetPowerState();
+        this.animCam.SetTrigger(ANIM_CAM_STATE_POWER);
+        this.ketchup.SetTargetThrowing(target.GetAttachableKetchup().transform);
+        this.target.Idle();
 
         //goes to next step
         power.InitPower();
@@ -106,26 +132,73 @@ public partial class GameController : MonoBehaviour
         power.OnPowerDone = score =>
         {
             //check score here 
-
+            this.currentScore = score;
             //the goes to next step 
             OnPowerReady();
         };
     }
     private void OnPowerReady()
     {
+        Development.Log("OnPowerReady");
         UISetHittingState();
         //goes to next step
         this.state = State.HITTING;
 
-        //start anim fly to target
+        bool isWinning = this.currentScore >= this.requireScore;
+        float ratio = (float)this.currentScore / (float)this.requireScore;
+
+        Vector3 targetPosition = TargetHandler.Instance.TargetPosition();
+        float power = 5.0f;
+        if (isWinning)
+        {
+            this.endingType = EndingType.WIN;
+            if (ratio >= 1.5f)
+            {
+                power = 15.0f;
+                this.endingType = EndingType.CRITICAL_WIN;
+            }
+        }
+        else
+        {
+            this.endingType = EndingType.LOSE;
+            targetPosition += Vector3.down * (1.0f - ratio) * 20.0f;
+            targetPosition.x = -10.0f; // out of camera
+        }
+
         //power should be in range (5, 15) to forms nice curves
-        m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
+        m_Throwable.Throw(targetPosition, power);
         
     }
 
     private void OnThrowDone(Throwable justDoneObj)
     {
-        this.ketchup.SetTargetThrowing(target.GetCurrentActiveTarget()?.transform);
+        UISetGameoverState();
+        if (endingType == EndingType.LOSE)
+        {
+            this.animCam.SetTrigger(ANIM_CAM_STATE_FAILED);
+            this.target.Happy();
+            return;
+        }
+        
+        //if win
+        Transform attachBone = target.GetAttachableKetchup().transform;
+        this.ketchup.SetTargetParticleVisible(true);
+        this.ketchup.ClearCakeFluid();
+        this.food.DoEffectExplode(attachBone);
+
+        if (endingType == EndingType.CRITICAL_WIN)
+        {
+            this.target.ClearImpact();
+        }
+        else
+        {
+            this.target.Impact();
+        }
+
+        DOVirtual.DelayedCall(1.0f, () =>
+        {
+            this.animCam.SetTrigger(ANIM_CAM_STATE_HIT);
+        });
     }
     
     #region power 

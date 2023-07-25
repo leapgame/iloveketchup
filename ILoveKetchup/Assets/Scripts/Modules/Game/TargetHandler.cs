@@ -6,6 +6,7 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
 {
     [SerializeField] AnimatorController m_AnimatorController;
     [SerializeField] Swapper m_Swapper;
+    [SerializeField] private Transform transTargetAnchor;
     public Transform transKetchupRaycastAnchor;
 
     bool m_IsFree = true;
@@ -21,7 +22,7 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
     // Start is called before the first frame update
     void Start()
     {
-        PlayRandomAnimation();
+        // PlayRandomAnimation();
 
         Throwable.OnThrowableHitTarget += OnThrowableHitTargetListener;
     }
@@ -58,6 +59,11 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
         }
     }
 
+    public GameObject GetAttachableKetchup()
+    {
+        return this.m_Swapper.HeadBone;
+    }
+
     public void Idle ()
     {
         m_AnimatorController.SetTriggerSingleParam(s_Idle);
@@ -83,7 +89,7 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
 
     public Vector3 TargetPosition()
     {
-        return m_Swapper.CharacterPosition();
+        return transTargetAnchor.position;
     }
 
     private void Update()
@@ -94,7 +100,7 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
 
         if (m_TimeCount > m_RandomAnimationTime)
         {
-            PlayRandomAnimation();
+            // PlayRandomAnimation();
 
             m_TimeCount -= m_RandomAnimationTime;
             m_RandomAnimationTime = Random.Range(2f, 5f);

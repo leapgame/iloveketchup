@@ -14,12 +14,17 @@ public partial class GameController : MonoBehaviour
 
     private void UISetPowerState()
     {
-        flowUI.SetActiveNodeByName("Power");
+        flowUI.SetActiveNodeByName(NODE_POWER);
     }
     
     private void UISetHittingState()
     {
-        flowUI.SetActiveNodeByName("Hitting");
+        flowUI.SetActiveNodeByName(NODE_HITTING);
+    }
+    
+    private void UISetGameoverState()
+    {
+        flowUI.SetActiveNodeByName(NODE_GAMEOVER);
     }
     
     #region callbacks

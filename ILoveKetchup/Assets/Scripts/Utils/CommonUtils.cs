@@ -557,5 +557,25 @@ public static class CommonUtils
             list[n] = value;  
         }  
     }
+    
+    public static GameObject FindInChildren(GameObject parent, string name)
+    {
+        foreach (Transform child in parent.transform)
+        {
+            if (child.name == name)
+            {
+                return child.gameObject;
+            }
+            else
+            {
+                GameObject result = FindInChildren(child.gameObject, name);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
 }
 
