@@ -28,8 +28,11 @@ public class Throwable : MonoBehaviour
         seq.Append(m_Transform.DORotate(new Vector3(90f, 0, 0), 0.5f, RotateMode.WorldAxisAdd).SetEase(Ease.OutBack));
         seq.Join(m_Transform.DOLocalMove(new Vector3(2f, -3f, -2f), 0.5f));
         seq.Append(m_Transform.DOShakePosition(0.1f, 0.25f).SetLoops(10));
-        seq.Append(m_Transform.DOJump(destination, 15f / power, 1, 5f / power)).SetEase(Ease.OutBack);
-        seq.Join(m_Transform.DORotate(new Vector3(90f, 0, 0), 5f / power, RotateMode.WorldAxisAdd).SetEase(Ease.OutBack));
+        seq.Append(m_Transform.DOJump(destination - new Vector3(0, -3f, 1f), 15f / power, 1, 5f / power)).SetEase(Ease.OutBack);
+        seq.Join(m_Transform.DORotate(new Vector3(360f, 0, 0), 5f / power, RotateMode.WorldAxisAdd).SetEase(Ease.OutBack));
+        seq.AppendInterval(0.75f);
+        seq.Append(m_Transform.DOMove(new Vector3(destination.x, destination.y, destination.z - UnityEngine.Random.Range(1f, 1.5f)), 1f));
+        seq.Join(m_Transform.DORotate(new Vector3(-120f, 0, 0), 1f, RotateMode.WorldAxisAdd).SetEase(Ease.OutBack));
         seq.AppendCallback(() =>
         {
             OnThrowableHitTarget(this);
