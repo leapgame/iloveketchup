@@ -13,10 +13,10 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
     float m_RandomAnimationTime = 0f;
     int m_NumberOfChanges = 0;
     private readonly string s_Animation = "animation";
-    private readonly string s_Impact = "impact";
-    private readonly string s_ClearImpact = "8";
-    private readonly string s_Happy = "2";
-    private readonly string s_Idle = "1";
+    private readonly string s_Impact = "Impact";
+    private readonly string s_ClearImpact = "ImpactHigh";
+    private readonly string s_Happy = "Happy";
+    private readonly string s_Idle = "Idle";
 
     // Start is called before the first frame update
     void Start()
@@ -60,26 +60,25 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
 
     public void Idle ()
     {
-
+        m_AnimatorController.SetTriggerSingleParam(s_Idle);
     }
 
     public void Impact ()
     {
         m_IsFree = false;
-        m_AnimatorController.SetInt(s_Animation + "," + "-1");
         m_AnimatorController.SetTriggerSingleParam(s_Impact);
     }
 
     public void ClearImpact ()
     {
         m_IsFree = false;
-        m_AnimatorController.SetInt(s_Animation + "," + s_ClearImpact);
+        m_AnimatorController.SetTriggerSingleParam(s_ClearImpact);
     }
 
     public void Happy ()
     {
         m_IsFree = false;
-        m_AnimatorController.SetInt(s_Animation + "," + s_Happy);
+        m_AnimatorController.SetTriggerSingleParam(s_Happy);
     }
 
     public Vector3 TargetPosition()
