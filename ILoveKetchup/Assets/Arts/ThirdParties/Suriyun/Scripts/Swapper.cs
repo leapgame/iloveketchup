@@ -1,28 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-    public class Swapper : MonoBehaviour
-    {
+public class Swapper : MonoBehaviour
+{
 
-        public GameObject[] character;
-        public int index;
-        public Texture btn_tex;
-        void Awake()
+    public GameObject[] character;
+    int m_Index;
+    void Awake()
+    {
+        foreach (GameObject c in character)
         {
-            foreach (GameObject c in character)
-            {
-                c.SetActive(false);
-            }
-            character[0].SetActive(true);
+            c.SetActive(false);
         }
-        void OnGUI()
-        {
-            if (GUI.Button(new Rect(Screen.width - 100, 0, 100, 100), btn_tex))
-            {
-                character[index].SetActive(false);
-                index++;
-                index %= character.Length;
-                character[index].SetActive(true);
-            }
-        }
+
+        m_Index = Random.Range(0, character.Length);
+        character[m_Index].SetActive(true);
     }
+
+    public Vector3 CharacterPosition()
+    {
+        return character[m_Index].transform.position;
+    }
+}

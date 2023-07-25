@@ -9,6 +9,11 @@ namespace Suriyun
 
         public Animator[] animators;
 
+        private void Start()
+        {
+            
+        }
+
         public void SwapVisibility(GameObject obj)
         {
             obj.SetActive(!obj.activeSelf);
@@ -74,6 +79,16 @@ namespace Suriyun
             foreach (Animator a in animators)
             {
                 a.SetTrigger(name);
+            }
+        }
+
+        public void SetTriggerSingleParam(string parameter = "param")
+        {
+            Debug.Log(parameter);
+
+            foreach (Animator a in animators)
+            {
+                a.SetTrigger(parameter);
             }
         }
     }
