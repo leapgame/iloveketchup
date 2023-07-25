@@ -17,6 +17,11 @@ public partial class GameController : MonoBehaviour
         flowUI.SetActiveNodeByName("Power");
     }
     
+    private void UISetHittingState()
+    {
+        flowUI.SetActiveNodeByName("Hitting");
+    }
+    
     #region callbacks
 
     public void OnTouch_ReadyConfirm()

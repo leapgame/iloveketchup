@@ -57,7 +57,7 @@ public partial class GameController : MonoBehaviour
         this.state = State.KETCHUP;
 
         //power should be in range (5, 15) to forms nice curves
-        m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
+        // m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
     }
     
     #region child steps
@@ -81,17 +81,30 @@ public partial class GameController : MonoBehaviour
     private void OnKetchupReady()
     {
         //hide current UI node
-        UISetPowerState();
         ketchup.SetBottleVisible(false);
-
-        //goes to next step
-        this.state = State.POWER;
-
-        
+        DoPower();
     }
 
+    private void DoPower()
+    {
+        UISetPowerState();
+
+        //goes to next step
+        power.InitPower();
+        
+        this.state = State.POWER;
+        power.StartPowerWheel();
+        power.OnPowerDone = score =>
+        {
+            //check score here 
+
+            //the goes to next step 
+            OnPowerReady();
+        };
+    }
     private void OnPowerReady()
     {
+        UISetHittingState();
         //goes to next step
         this.state = State.HITTING;
 
