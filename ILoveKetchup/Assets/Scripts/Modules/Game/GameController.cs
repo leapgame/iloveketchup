@@ -18,6 +18,7 @@ public partial class GameController : MonoBehaviour
     
     [SerializeField] private KetchupHandler ketchup;
     [SerializeField] private PowerHandler power;
+    [SerializeField] private TargetHandler target;
     [SerializeField] private GameObject foodContainer;
 
     //TODO: test, temporary assign
@@ -45,6 +46,16 @@ public partial class GameController : MonoBehaviour
         Init();
     }
 
+    private void OnEnable()
+    {
+        Throwable.OnThrowableHitTarget += OnThrowDone;
+    }
+
+    private void OnDisable()
+    {
+        Throwable.OnThrowableHitTarget -= OnThrowDone;
+    }
+
     private void Init()
     {
         StartCoroutine(C_ProcessLogic());
@@ -55,9 +66,6 @@ public partial class GameController : MonoBehaviour
         yield return C_InitData();
         yield return C_SpawnObjects();
         this.state = State.KETCHUP;
-
-        //power should be in range (5, 15) to forms nice curves
-        // m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
     }
     
     #region child steps
@@ -69,6 +77,7 @@ public partial class GameController : MonoBehaviour
     
     private IEnumerator C_SpawnObjects()
     {
+        this.ketchup.SetTargetKetchup(this.foodContainer.transform);
         yield break;
     }
     
@@ -111,6 +120,12 @@ public partial class GameController : MonoBehaviour
         //start anim fly to target
         //power should be in range (5, 15) to forms nice curves
         m_Throwable.Throw(TargetHandler.Instance.TargetPosition(), 5f);
+        
+    }
+
+    private void OnThrowDone(Throwable justDoneObj)
+    {
+        this.ketchup.SetTargetThrowing(target.GetCurrentActiveTarget()?.transform);
     }
     
     #region power 

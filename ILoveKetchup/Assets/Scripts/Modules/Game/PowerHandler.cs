@@ -163,7 +163,7 @@ public class PowerHandler : MonoBehaviour
         if (++this.step >= this.maxStep)
         {
             isTouchable = false;
-            DOVirtual.DelayedCall(1.0f, () =>
+            DOVirtual.DelayedCall(2.0f, () =>
             {
                 OnPowerDone?.Invoke(this.score);
             });

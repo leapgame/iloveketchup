@@ -3,9 +3,9 @@ using System.Collections;
 
 public class Swapper : MonoBehaviour
 {
-
     public GameObject[] character;
-    int m_Index;
+    private int m_Index = 0;
+    public GameObject ActiveCharacter => this.character[m_Index];
     void Awake()
     {
         foreach (GameObject c in character)

@@ -1,10 +1,12 @@
 using UnityEngine;
 using Suriyun;
+using UnityEngine.Serialization;
 
 public class TargetHandler : AbstractSingleton<TargetHandler>
 {
     [SerializeField] AnimatorController m_AnimatorController;
     [SerializeField] Swapper m_Swapper;
+    public Transform transKetchupRaycastAnchor;
 
     bool m_IsFree = true;
     float m_TimeCount = 0f;
@@ -41,6 +43,18 @@ public class TargetHandler : AbstractSingleton<TargetHandler>
             int[] availableIdleAnimationIndex = { 1, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
             int randomIdx = availableIdleAnimationIndex[Random.Range(0, availableIdleAnimationIndex.Length)];
             m_AnimatorController.SetInt(s_Animation + "," + randomIdx.ToString());
+        }
+    }
+
+    public GameObject GetCurrentActiveTarget()
+    {
+        try
+        {
+            return this.m_Swapper.ActiveCharacter;
+        }
+        catch
+        {
+            return null;
         }
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using Game.Input;
 using Obi;
 using UnityEngine;
@@ -12,19 +13,44 @@ public class KetchupHandler : MonoBehaviour
     {
         public Transform reference;
         public Vector3 localPos;
+        public int particleIndex;
 
         public SolidData(Transform reference)
         {
             this.reference = reference;
             this.localPos = Vector3.zero;
+            this.particleIndex = 0;
         }
     };
     
     [SerializeField] private InputActions input;
-    [SerializeField] private ObiSolver solver; // Reference to the ObiEmitter component.
-    [SerializeField] private ObiEmitter emitter; // Reference to the ObiEmitter component.
-    [SerializeField] private GameObject objKetchupBottle;
     
+    
+    [Header("Solver for Cake")]
+    [SerializeField] private ObiSolver solver; // using for cake.
+    [SerializeField] private ObiEmitter emitter; // using for cake.
+    [SerializeField] private GameObject objKetchupBottle;
+    [SerializeField] private ObiParticleRenderer particleRenderer;
+
+    [Header("Solver for ThrowTarget")]
+    [SerializeField] private ObiSolver solverTarget; // using for the target will be thrown at face .
+    [SerializeField] private ObiEmitter emitterTarget; // using for the target will be thrown at face.
+    [SerializeField] private ObiParticleRenderer targetParticleRenderer;
+
+    private float _particleSize = 1.5f;
+    public float ParticleSize
+    {
+        get
+        {
+            return this._particleSize;
+        }
+        set
+        {
+            this._particleSize = value;
+            this.particleRenderer.radiusScale = value;
+        }
+    }
+    private Transform targetKetchup;
     #region lifecycles
 
     private void Start()
@@ -35,20 +61,15 @@ public class KetchupHandler : MonoBehaviour
     private void OnEnable()
     {
         input.OnMousePositionUpdate += this.MousePositionUpdate;
-        solver.OnBeginStep += Solver_OnBeginStep;
         emitter.OnEmitParticle += OnEmitParticle;
-        // solver.OnCollision += Solver_OnCollision;
-        // solver.OnParticleCollision += Solver_OnParticleCollision;
+        emitterTarget.OnEmitParticle += OnEmitParticleOnTarget;
     }
 
     private void OnDisable()
     {
         input.OnMousePositionUpdate -= this.MousePositionUpdate;
-        solver.OnBeginStep -= Solver_OnBeginStep;
         emitter.OnEmitParticle -= OnEmitParticle;
-
-        // solver.OnCollision -= Solver_OnCollision;
-        // solver.OnParticleCollision -= Solver_OnParticleCollision;
+        emitterTarget.OnEmitParticle -= OnEmitParticleOnTarget;
     }
     #endregion
     
@@ -67,6 +88,7 @@ public class KetchupHandler : MonoBehaviour
     public void ClearAll()
     {
         this.emitter.KillAll();
+        this.emitterTarget.KillAll();
     }
 
     public void ChangeBottle()
@@ -77,6 +99,23 @@ public class KetchupHandler : MonoBehaviour
     public void SetBottleVisible(bool isVisible)
     {
         this.objKetchupBottle.SetActive(isVisible);
+    }
+
+    public void SetTargetKetchup(Transform trans)
+    {
+        this.targetKetchup = trans;
+    }
+
+    public void SetTargetThrowing(Transform trans)
+    {
+        if (trans == null)
+        {
+            Development.Log("SetTargetThrowing ERROR target is null");
+            return;
+        }
+        
+        this.solverTarget.transform.SetParent(trans);
+        this.SetParticleVisible(true, false);
     }
 
     #endregion
@@ -100,12 +139,17 @@ public class KetchupHandler : MonoBehaviour
     #region fluid particles
     private SolidData[] solids = new SolidData[0];
     private float minDistancePerFluid = 0.085f;
+    
     private void InitFluid()
     {
         // resize array to store one reference transform per particle:
         Array.Resize(ref solids, solver.allocParticleCount);
+        ParticleSize = 1.5f;
+        SetParticleVisible(false, true);
     }
-
+    
+    #region cake fluid
+    
     private Vector3 oldSpawnPos = Vector3.up * 1000.0f;
     private void SpawnFluidAt(Vector3 rayPos)
     {
@@ -117,82 +161,71 @@ public class KetchupHandler : MonoBehaviour
 
     void OnEmitParticle(ObiEmitter emitter, int particleIndex)
     {   
-        Solidify(particleIndex, new SolidData(null));
-    }
-
-    #region collision (deprecated) performance issue
-    void Solver_OnBeginStep(ObiSolver s, float stepTime)
-    {
-        for (int i = 0; i < solids.Length; ++i)
-        {
-            try
-            {
-                if (solver.invMasses[i] < 0.0001f)
-                {
-                    solver.positions[i] =
-                        solver.transform.InverseTransformPoint(solids[i].reference.TransformPoint(solids[i].localPos));
-                }
-            }
-            catch
-            {
-                //no need to handle this
-            }
-        }
-    }
-    
-    void Solver_OnCollision(object sender, ObiSolver.ObiCollisionEventArgs e)
-    {
-
-        var colliderWorld = ObiColliderWorld.GetInstance();
-
-        for (int i = 0; i < e.contacts.Count; ++i)
-        {
-            if (e.contacts.Data[i].distance < 0.001f)
-            {
-                var col = colliderWorld.colliderHandles[e.contacts.Data[i].bodyB].owner;
-                Solidify(solver.simplices[e.contacts.Data[i].bodyA], new SolidData(col.transform));
-            }
-        }
-    }
-    
-    void Solver_OnParticleCollision(object sender, ObiSolver.ObiCollisionEventArgs e)
-    {
-        for (int i = 0; i < e.contacts.Count; ++i)
-        {
-            if (e.contacts.Data[i].distance < 0.001f)
-            {
-                int particleIndexA = solver.simplices[e.contacts.Data[i].bodyA];
-                int particleIndexB = solver.simplices[e.contacts.Data[i].bodyB];
+        // remove the 'fluid' flag from the particle, turning it into a solid granule:
+        solver.phases[particleIndex] &= (int)(~ObiUtils.ParticleFlags.Fluid);
+        // fix the particle in place (by giving it infinite mass):
+        solver.invMasses[particleIndex] = 0;
         
-                if (solver.invMasses[particleIndexA] < 0.0001f && solver.invMasses[particleIndexB] >= 0.0001f)
-                    Solidify(particleIndexB, solids[particleIndexA]);
-                if (solver.invMasses[particleIndexB] < 0.0001f && solver.invMasses[particleIndexA] >= 0.0001f)
-                    Solidify(particleIndexA, solids[particleIndexB]);
-            }
+        SolidData addedData = AddToSolidData(particleIndex);
+        TryEmitToTargetAlso(addedData.localPos);
+    }
+    
+    SolidData AddToSolidData(int particleIndex)
+    {
+        SolidData sd = new SolidData(null);
+        sd.particleIndex = particleIndex;
+        sd.localPos =
+            targetKetchup.InverseTransformPoint(solver.transform.TransformPoint(solver.positions[particleIndex]));
+        solids[particleIndex] = sd;
+        return sd;
+    }
+
+
+    #endregion
+    
+    //have to fluid at target as well, cause if we spawn at the time cake hit target its will cause laggy
+    #region target fluid
+
+    private Tween tweenParticle = null;
+    public void SetParticleVisible(bool isVisible, bool isNow = false)
+    {
+        float finalValue = isVisible ? ParticleSize : 0.0f;
+        if (isNow)
+        {
+            this.targetParticleRenderer.radiusScale = finalValue;
+            return;
+        }
+        tweenParticle?.Kill();
+        tweenParticle = DOVirtual.Float(this.targetParticleRenderer.radiusScale, finalValue, 0.35f, f =>
+        {
+            this.targetParticleRenderer.radiusScale = f;
+        }).Play();
+    }
+    
+    void OnEmitParticleOnTarget(ObiEmitter emitter, int particleIndex)
+    {
+        // remove the 'fluid' flag from the particle, turning it into a solid granule:
+        solverTarget.phases[particleIndex] &= (int)(~ObiUtils.ParticleFlags.Fluid);
+        // fix the particle in place (by giving it infinite mass):
+        solverTarget.invMasses[particleIndex] = 0;
+    }
+    private List<Vector3> targetPositions = new List<Vector3>();
+    void TryEmitToTargetAlso(Vector3 cakeLocalPos)
+    {
+        Vector3 raycastFromPoint = TargetHandler.Instance.transKetchupRaycastAnchor.TransformPoint(cakeLocalPos);
+        targetPositions.Add(raycastFromPoint);
+        
+        //try ray cast if hit the target
+        Ray rayToTarget = new Ray(raycastFromPoint, Vector3.forward);
+        RaycastHit hitInfo;
+        if (Physics.Raycast(rayToTarget, hitInfo: out hitInfo))
+        {
+            Vector3 spawnFluidPoint = hitInfo.point + hitInfo.normal * 0.05f;
+            emitterTarget.transform.position = spawnFluidPoint;
+            emitterTarget.EmitParticle(0.0f, 0.0f);
         }
     }
     #endregion
-    
-    void Solidify(int particleIndex, SolidData solid)
-    {
-        // remove the 'fluid' flag from the particle, turning it into a solid granule:
-        solver.phases[particleIndex] &= (int)(~ObiUtils.ParticleFlags.Fluid);
-
-        // fix the particle in place (by giving it infinite mass):
-        solver.invMasses[particleIndex] = 0;
-
-        // set the solid data for this particle:
-        // try
-        // {
-        //     solid.localPos =
-        //         solid.reference.InverseTransformPoint(solver.transform.TransformPoint(solver.positions[particleIndex]));
-        //     solids[particleIndex] = solid;
-        // }
-        // catch
-        // {
-        //     //no need to handle this
-        // }
-    }
     
     #endregion
     
@@ -202,6 +235,12 @@ public class KetchupHandler : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawRay(this.ray);
+        
+        Gizmos.color = Color.red;
+        foreach (var targetPosition in this.targetPositions)
+        {
+            Gizmos.DrawSphere(targetPosition, 0.1f);
+        }
     }
 
     #endregion  
