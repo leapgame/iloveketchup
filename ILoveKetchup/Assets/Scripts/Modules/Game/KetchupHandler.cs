@@ -110,6 +110,12 @@ public class KetchupHandler : MonoBehaviour
         this.solverTarget.transform.SetParent(trans);
     }
 
+    public void SetKetchupColor(Color col)
+    {
+        this.particleRenderer.particleColor = col;
+        this.targetParticleRenderer.particleColor = col;
+    }
+    
     #endregion
     
     #region inputs

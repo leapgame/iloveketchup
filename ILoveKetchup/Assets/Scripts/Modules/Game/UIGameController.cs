@@ -33,6 +33,11 @@ public partial class GameController : MonoBehaviour
     {
         OnKetchupReady();
     }
+    
+    public void OnTouch_Ready()
+    {
+        OnKetchupReady();
+    }
 
     #endregion
 }
