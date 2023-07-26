@@ -151,6 +151,7 @@ public class KetchupHandler : MonoBehaviour
     private Vector3 oldSpawnPos = Vector3.up * 1000.0f;
     private void SpawnFluidAt(Vector3 rayPos)
     {
+        if (solver.gameObject.activeInHierarchy == false) return;
         emitter.transform.position = rayPos + Vector3.up * 0.05f;
         if (Vector3.Distance(rayPos, oldSpawnPos) < minDistancePerFluid) return;
         this.oldSpawnPos = rayPos;
@@ -194,14 +195,28 @@ public class KetchupHandler : MonoBehaviour
         float finalValue = isVisible ? ParticleSize : 0.0f;
         if (isNow)
         {
-            this.targetParticleRenderer.radiusScale = finalValue;
+            this.targetParticleRenderer.enabled = false;
             return;
+        }
+        
+        if (isVisible)
+        {
+            this.targetParticleRenderer.enabled = true;
         }
         tweenParticle?.Kill();
         tweenParticle = DOVirtual.Float(this.targetParticleRenderer.radiusScale, finalValue, 0.35f, f =>
         {
             this.targetParticleRenderer.radiusScale = f;
-        }).Play();
+        })
+            .Play()
+            .OnComplete(() =>
+            {
+                this.targetParticleRenderer.radiusScale = finalValue;
+                if (isVisible == false)
+                {
+                    this.targetParticleRenderer.enabled = false;
+                }
+            });
     }
     
     void OnEmitParticleOnTarget(ObiEmitter emitter, int particleIndex)
@@ -211,18 +226,16 @@ public class KetchupHandler : MonoBehaviour
         // fix the particle in place (by giving it infinite mass):
         solverTarget.invMasses[particleIndex] = 0;
     }
-    private List<Vector3> targetPositions = new List<Vector3>();
     void TryEmitToTargetAlso(Vector3 cakeLocalPos)
     {
         Vector3 raycastFromPoint = TargetHandler.Instance.transKetchupRaycastAnchor.TransformPoint(cakeLocalPos);
-        targetPositions.Add(raycastFromPoint);
         
         //try ray cast if hit the target
         Ray rayToTarget = new Ray(raycastFromPoint, Vector3.forward);
         RaycastHit hitInfo;
         if (Physics.Raycast(rayToTarget, hitInfo: out hitInfo))
         {
-            Vector3 spawnFluidPoint = hitInfo.point + hitInfo.normal * 0.05f;
+            Vector3 spawnFluidPoint = hitInfo.point + hitInfo.normal * 0.1f;
             emitterTarget.transform.position = spawnFluidPoint;
             emitterTarget.EmitParticle(0.0f, 0.0f);
         }
@@ -237,12 +250,6 @@ public class KetchupHandler : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawRay(this.ray);
-        
-        Gizmos.color = Color.red;
-        foreach (var targetPosition in this.targetPositions)
-        {
-            Gizmos.DrawSphere(targetPosition, 0.1f);
-        }
     }
 
     #endregion  

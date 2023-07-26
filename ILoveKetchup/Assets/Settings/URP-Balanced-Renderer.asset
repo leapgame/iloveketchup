@@ -19,15 +19,15 @@ MonoBehaviour:
     particleBlendSource: 2
     particleBlendDestination: 4
     particleZWrite: 0
-    thicknessCutoff: 0.95
-    thicknessDownsample: 4
+    thicknessCutoff: 0.83
+    thicknessDownsample: 2
     generateSurface: 1
     blurRadius: 0.0071
     surfaceDownsample: 3
     lighting: 1
-    smoothness: 0.965
+    smoothness: 0.681
     metalness: 0
-    ambientMultiplier: 2.77
+    ambientMultiplier: 2
     generateReflection: 0
     reflection: 0
     generateRefraction: 1

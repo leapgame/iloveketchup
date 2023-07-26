@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class FoodHandler : MonoBehaviour
 {
-    //todo: tmp set by hierachy by now
-    public GameObject activeFood;
+    [SerializeField] private List<GameObject> foods;
+    public GameObject activeFood { get; private set; }
 
     public float explosionRadius = 5f;
     public float jumpPower = 5f;
@@ -19,6 +20,15 @@ public class FoodHandler : MonoBehaviour
     private List<Transform> foodNonColliderComponents = new List<Transform>(); 
     private void Awake()
     {
+        ActiveRandomFood();
+    }
+
+    void ActiveRandomFood()
+    {
+        foods.ForEach(fd => fd.gameObject.SetActive(false));
+        int random = Random.Range(0, foods.Count);
+        foods[random].gameObject.SetActive(true);
+        this.activeFood = foods[random];
         GetFoodComponents();
     }
 
@@ -44,9 +54,9 @@ public class FoodHandler : MonoBehaviour
         List<Transform> willAttachToTargetObjs = new List<Transform>(this.foodNonColliderComponents.Count);
         foodNonColliderComponents.ForEach(food =>
         {
+            bool randomValue = Random.value <= 0.6f;
             RaycastHit hit;
-            // Does the ray intersect any objects excluding the player layer
-            if (Physics.Raycast(food.position, Vector3.forward, out hit, Mathf.Infinity, attachRaycastLayers))
+            if (randomValue && Physics.Raycast(food.position, Vector3.forward, out hit, Mathf.Infinity, attachRaycastLayers))
             {
                 Debug.DrawRay(food.position, Vector3.forward * hit.distance, Color.yellow);
                 willAttachToTargetObjs.Add(food);
@@ -62,7 +72,6 @@ public class FoodHandler : MonoBehaviour
                             food.SetParent(attachedBone);
                         }
                     });
-               
             }
             else
             {

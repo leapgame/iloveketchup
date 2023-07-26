@@ -352,7 +352,6 @@ namespace Obi
 
         private void ResetParticle(int index, float offset, float deltaTime)
         {
-
             distEnumerator.MoveNext();
             ObiEmitterShape.DistributionPoint distributionPoint = distEnumerator.Current;
 
